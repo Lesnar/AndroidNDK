@@ -3,6 +3,9 @@ package com.series.ndk
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
+import android.widget.Toast
+import com.series.ndk.data.User
+
 import com.series.ndk.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -25,6 +28,19 @@ class MainActivity : AppCompatActivity() {
         binding.sayHelloText.text = sayHello("AndroidNDK")
 
         binding.isPositiveText.text = "isPositive(11) = ${isPositive(11)}"
+
+        val array = intArrayOf(1, 2, 3, 4, 5)
+        binding.sumArrayText.text = "sumArray(${array.joinToString()}) = ${sumArray(array)}"
+
+        val created = createArray(6)
+        binding.createArrayText.text = "createArray(6) = ${created.joinToString()}"
+
+        val input = intArrayOf(1, 2, 3)
+        val doubled = multiplyArray(input)
+        binding.multiplyArrayText.text =
+            "multiplyArray(${input.joinToString()}) = ${doubled.joinToString()}"
+
+        binding.userInfoText.text = getUserInfo(User("Martin", 30))
     }
 
     /**
@@ -40,6 +56,20 @@ class MainActivity : AppCompatActivity() {
     external fun sayHello(name: String): String
 
     external fun isPositive(value: Int): Boolean
+
+//    ======== Day02 ==========
+
+    external fun sumArray(values: IntArray): Int
+
+    external fun createArray(size: Int): IntArray
+
+    external fun multiplyArray(values: IntArray): IntArray
+
+    external fun getUserInfo(user: User): String
+
+    fun showMessage(message: String){
+        Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()
+    }
 
     companion object {
         // Used to load the 'ndk' library on application startup.
