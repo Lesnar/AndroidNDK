@@ -124,3 +124,27 @@ Java_com_series_ndk_MainActivity_getUserInfo(JNIEnv *env, jobject thiz, jobject 
 
     return env->NewStringUTF(result.c_str());
 }
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_series_ndk_MainActivity_createUser(JNIEnv *env, jobject thiz) {
+    // 1. 按全限定名找到 User 类（包名用 / 分隔）
+    jclass userClass = env->FindClass("com/series/ndk/data/User");
+    if (userClass == nullptr) {
+        return nullptr; // 找不到类，异常已由 JVM 抛出
+    }
+
+    // 2. 拿到构造方法的 jmethodID，方法名固定为 <init>
+    //    签名 (Ljava/lang/String;I)V 对应 User(name: String, age: Int)
+    jmethodID constructor = env->GetMethodID(userClass, "<init>",
+                                             "(Ljava/lang/String;I)V");
+    if (constructor == nullptr) {
+        return nullptr;
+    }
+
+    // 3. 调用构造方法创建对象：NewObject(类, 构造方法, 参数...)
+    jstring name = env->NewStringUTF("Martin");
+    jint age = 28;
+    jobject user = env->NewObject(userClass, constructor, name, age);
+
+    return user;
+}

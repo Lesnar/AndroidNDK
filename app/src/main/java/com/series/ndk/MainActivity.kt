@@ -40,7 +40,10 @@ class MainActivity : AppCompatActivity() {
         binding.multiplyArrayText.text =
             "multiplyArray(${input.joinToString()}) = ${doubled.joinToString()}"
 
-        binding.userInfoText.text = getUserInfo(User("Martin", 30))
+        val nativeUser = createUser()
+
+        binding.userInfoText.text =
+            "getUserInfo: ${getUserInfo(User("Martin", 30))}\ncreateUser() = $nativeUser"
     }
 
     /**
@@ -66,6 +69,8 @@ class MainActivity : AppCompatActivity() {
     external fun multiplyArray(values: IntArray): IntArray
 
     external fun getUserInfo(user: User): String
+
+    external fun createUser(): User
 
     fun showMessage(message: String){
         Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()
