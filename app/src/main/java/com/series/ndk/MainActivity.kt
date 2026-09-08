@@ -17,6 +17,14 @@ class MainActivity : AppCompatActivity() {
 
         // Example of a call to a native method
         binding.sampleText.text = stringFromJNI()
+
+        binding.addResultText.text = "add(3, 4) = ${add(3, 4)}"
+
+        binding.multiplyResultText.text = "multiply(2.5, 4.0) = ${multiply(2.5, 4.0)}"
+
+        binding.sayHelloText.text = sayHello("AndroidNDK")
+
+        binding.isPositiveText.text = "isPositive(11) = ${isPositive(11)}"
     }
 
     /**
@@ -24,6 +32,14 @@ class MainActivity : AppCompatActivity() {
      * which is packaged with this application.
      */
     external fun stringFromJNI(): String
+
+    external fun add(a: Int, b: Int): Int
+
+    external fun multiply(a: Double, b: Double): Double
+
+    external fun sayHello(name: String): String
+
+    external fun isPositive(value: Int): Boolean
 
     companion object {
         // Used to load the 'ndk' library on application startup.
