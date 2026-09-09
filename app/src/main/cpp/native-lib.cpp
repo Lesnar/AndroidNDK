@@ -1,5 +1,19 @@
 #include <jni.h>
 #include <string>
+#include <android/log.h>
+
+// ======== 日志宏 ========
+// LOG_TAG 是固定的标签，Logcat 里按它过滤；四个宏分别对应 Log.e/w/i/d，
+// __VA_ARGS__ 把 "fmt", args... 原样转发给 __android_log_print
+#define LOG_TAG "NDK_DEMO"
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN,  LOG_TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  LOG_TAG, __VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+
+// 引入静态库的头文件。链接关系在 CMakeLists.txt 里声明（target_link_libraries），
+// 这里只需要能找到声明；真正 mu_factorial 的实现来自 libmath_utils.a
+#include "math_utils/math_utils.h"
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_series_ndk_MainActivity_stringFromJNI(
@@ -147,4 +161,21 @@ Java_com_series_ndk_MainActivity_createUser(JNIEnv *env, jobject thiz) {
     jobject user = env->NewObject(userClass, constructor, name, age);
 
     return user;
+}
+
+// ======== 静态库（.a）示例 ========
+// 这两个函数的实现来自 libmath_utils.a：链接器在编译期把符号拷进 libndk.so，
+// 运行时 app 只加载 libndk.so 一个库，感知不到 .a 的存在
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_series_ndk_MainActivity_squareFromStaticLib(JNIEnv *env, jobject thiz, jint x) {
+    jint result = mu_square(x);
+    LOGI("squareFromStaticLib: mu_square(%d) = %d", x, result);
+    return result;
+}
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_series_ndk_MainActivity_factorialFromStaticLib(JNIEnv *env, jobject thiz, jint n) {
+    return mu_factorial(n);
 }

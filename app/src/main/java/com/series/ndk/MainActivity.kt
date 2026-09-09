@@ -44,6 +44,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.userInfoText.text =
             "getUserInfo: ${getUserInfo(User("Martin", 30))}\ncreateUser() = $nativeUser"
+
+//        ======== 静态库 .a 示例：实现在 libmath_utils.a 里，已链入 libndk.so ========
+        binding.staticLibText.text =
+            "squareFromStaticLib(7) = ${squareFromStaticLib(7)}\n" +
+            "factorialFromStaticLib(10) = ${factorialFromStaticLib(10)}"
     }
 
     /**
@@ -71,6 +76,12 @@ class MainActivity : AppCompatActivity() {
     external fun getUserInfo(user: User): String
 
     external fun createUser(): User
+
+//    ======== 静态库 .a ==========
+
+    external fun squareFromStaticLib(x: Int): Int
+
+    external fun factorialFromStaticLib(n: Int): Long
 
     fun showMessage(message: String){
         Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()
