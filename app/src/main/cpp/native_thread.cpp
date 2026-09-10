@@ -8,6 +8,7 @@
 //
 #include <jni.h>
 #include <pthread.h>
+#include <thread>
 #include <android/log.h>
 
 #define LOG_TAG "NDK_DEMO"
@@ -67,4 +68,43 @@ Java_com_series_ndk_MainActivity_nativeThreadDemo(JNIEnv *env, jobject thiz) {
     pthread_create(&thread, nullptr, threadEntry, args);
     // 演示用途，不 join，主线程直接返回，子线程后台异步跑完自己 detach
     pthread_detach(thread);
+}
+
+// ======== std::thread 版本：逻辑和上面 pthread 版完全一样，写法更 C++ ========
+// std::thread 底层在 Android/NDK 上也是包了一层 pthread，AttachCurrentThread /
+// DetachCurrentThread 该做的事一样都不能少，区别只是线程创建、传参、生命周期管理的写法。
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_series_ndk_MainActivity_nativeStdThreadDemo(JNIEnv *env, jobject thiz) {
+    // lambda 直接按值捕获全局引用，不用像 pthread 那样手动打包成 ThreadArgs* 再 new/delete
+    jobject activityGlobalRef = env->NewGlobalRef(thiz);
+
+    std::thread worker([activityGlobalRef]() {
+        JNIEnv *threadEnv = nullptr;
+        int attachResult = gJavaVM->AttachCurrentThread(&threadEnv, nullptr);
+        if (attachResult != JNI_OK) {
+            LOGE("std::thread AttachCurrentThread failed: %d", attachResult);
+            return;
+        }
+
+        LOGI("std::thread attached, calling back into Java");
+
+        jclass activityClass = threadEnv->GetObjectClass(activityGlobalRef);
+        jmethodID showMessage = threadEnv->GetMethodID(
+                activityClass, "showMessage", "(Ljava/lang/String;)V");
+        if (showMessage != nullptr) {
+            jstring message = threadEnv->NewStringUTF("hello from std::thread");
+            threadEnv->CallVoidMethod(activityGlobalRef, showMessage, message);
+            threadEnv->DeleteLocalRef(message);
+        }
+        threadEnv->DeleteLocalRef(activityClass);
+        threadEnv->DeleteGlobalRef(activityGlobalRef);
+
+        gJavaVM->DetachCurrentThread();
+        LOGI("std::thread detached");
+    });
+
+    // std::thread 析构前必须 join() 或 detach()，否则程序直接 std::terminate。
+    // 这里不需要等结果，所以 detach，让它后台自己跑完。
+    worker.detach();
 }

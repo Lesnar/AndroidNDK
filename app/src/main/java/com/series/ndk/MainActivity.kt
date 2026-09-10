@@ -61,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         binding.nativeThreadBtn.setOnClickListener {
             nativeThreadDemo()
         }
+
+        binding.stdThreadBtn.setOnClickListener {
+            nativeStdThreadDemo()
+        }
     }
 
     /**
@@ -104,6 +108,8 @@ class MainActivity : AppCompatActivity() {
 //    ======== native 线程附加 JVM ==========
 
     external fun nativeThreadDemo()
+
+    external fun nativeStdThreadDemo()
 
     fun showMessage(message: String){
         runOnUiThread {

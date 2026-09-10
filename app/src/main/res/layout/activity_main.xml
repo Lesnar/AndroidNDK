@@ -122,6 +122,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="运行 nativeThreadDemo" />
+
+        <Button
+            android:id="@+id/std_thread_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="运行 nativeStdThreadDemo" />
     </LinearLayout>
 
 
