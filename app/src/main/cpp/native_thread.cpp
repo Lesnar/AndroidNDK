@@ -12,6 +12,9 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include <queue>
+#include <condition_variable>
+#include <chrono>
 #include <android/log.h>
 
 #define LOG_TAG "NDK_DEMO"
@@ -170,5 +173,82 @@ Java_com_series_ndk_MainActivity_nativeMutexDemo(JNIEnv *env, jobject thiz) {
     std::string result = "expected=" + std::to_string(expected) +
                           ", 不加锁结果=" + std::to_string(unsafeCounter) +
                           ", 加锁结果=" + std::to_string(safeCounter);
+    return env->NewStringUTF(result.c_str());
+}
+
+// ======== std::condition_variable 演示：生产者-消费者 ========
+// mutex 只能保证“同一时刻只有一个线程进临界区”，但没法解决“消费者怎么知道队列里有新数据、
+// 不用傻等（忙轮询）”的问题——这正是 condition_variable 要解决的：
+// 线程在没有数据时挂起（不占 CPU），有数据时被 notify 唤醒。
+static constexpr int kItemCount = 5;
+
+struct ProducerConsumerState {
+    std::mutex mutex;
+    std::condition_variable cv;
+    std::queue<int> queue;
+    bool finished = false; // 生产者已经生产完，消费者不用再等新数据了
+};
+
+static void producer(ProducerConsumerState *state) {
+    for (int i = 1; i <= kItemCount; i++) {
+        {
+            // unique_lock 和 lock_guard 类似会自动解锁，但支持配合 cv 临时释放锁，
+            // 所以 condition_variable 必须搭配 unique_lock 而不是 lock_guard
+            std::unique_lock<std::mutex> lock(state->mutex);
+            state->queue.push(i);
+            LOGI("producer push %d", i);
+        }
+        // notify 必须在锁外调用也可以（这里在花括号外），避免被唤醒的线程立刻又阻塞在锁上
+        state->cv.notify_one();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50)); // 模拟生产耗时
+    }
+
+    {
+        std::unique_lock<std::mutex> lock(state->mutex);
+        state->finished = true;
+    }
+    state->cv.notify_one(); // 最后再唤醒一次，让消费者能退出等待、发现 finished=true
+}
+
+static void consumer(ProducerConsumerState *state, std::vector<int> *consumed) {
+    while (true) {
+        std::unique_lock<std::mutex> lock(state->mutex);
+        // wait 第二个参数是谓词：条件不满足就释放锁并挂起，被 notify 唤醒后重新加锁并再判一次谓词
+        // （防止“虚假唤醒”——操作系统偶尔会无缘无故唤醒等待线程）
+        state->cv.wait(lock, [state] {
+            return !state->queue.empty() || state->finished;
+        });
+
+        if (state->queue.empty()) {
+            // 队列空了并且生产者已完成，没有更多数据可消费，退出
+            break;
+        }
+
+        int value = state->queue.front();
+        state->queue.pop();
+        lock.unlock(); // 尽快解锁，处理数据不必占着锁
+        LOGI("consumer pop %d", value);
+        consumed->push_back(value);
+    }
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_series_ndk_MainActivity_nativeConditionVariableDemo(JNIEnv *env, jobject thiz) {
+    ProducerConsumerState state;
+    std::vector<int> consumed;
+
+    std::thread producerThread(producer, &state);
+    std::thread consumerThread(consumer, &state, &consumed);
+
+    producerThread.join();
+    consumerThread.join();
+
+    std::string result = "consumed order = ";
+    for (int v: consumed) {
+        result += std::to_string(v) + " ";
+    }
+    LOGI("condition_variable demo: %s", result.c_str());
+
     return env->NewStringUTF(result.c_str());
 }

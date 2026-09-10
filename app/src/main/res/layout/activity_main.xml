@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <LinearLayout
@@ -142,6 +141,23 @@
 
         <TextView
             android:id="@+id/mutex_demo_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="======== std::condition_variable 演示 =========" />
+
+        <Button
+            android:id="@+id/cv_demo_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="运行 nativeConditionVariableDemo" />
+
+        <TextView
+            android:id="@+id/cv_demo_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="" />

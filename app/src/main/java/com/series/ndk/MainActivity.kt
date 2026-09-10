@@ -69,6 +69,10 @@ class MainActivity : AppCompatActivity() {
         binding.mutexDemoBtn.setOnClickListener {
             binding.mutexDemoText.text = nativeMutexDemo()
         }
+
+        binding.cvDemoBtn.setOnClickListener {
+            binding.cvDemoText.text = nativeConditionVariableDemo()
+        }
     }
 
     /**
@@ -116,6 +120,8 @@ class MainActivity : AppCompatActivity() {
     external fun nativeStdThreadDemo()
 
     external fun nativeMutexDemo(): String
+
+    external fun nativeConditionVariableDemo(): String
 
     fun showMessage(message: String){
         runOnUiThread {
