@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.userFromCppText.text = "getUserFromCPP() = ${getUserFromCPP()}"
+
+//        ======== native 线程附加 JVM 演示：子线程回调 showMessage，看 Toast ========
+        binding.nativeThreadBtn.setOnClickListener {
+            nativeThreadDemo()
+        }
     }
 
     /**
@@ -96,8 +101,14 @@ class MainActivity : AppCompatActivity() {
 
     external fun getUserFromCPP(): String
 
+//    ======== native 线程附加 JVM ==========
+
+    external fun nativeThreadDemo()
+
     fun showMessage(message: String){
-        Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()
+        runOnUiThread {
+            Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()
+        }
     }
 
     companion object {

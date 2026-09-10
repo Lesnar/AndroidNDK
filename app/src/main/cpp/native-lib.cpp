@@ -16,6 +16,14 @@
 // 这里只需要能找到声明；真正 mu_factorial 的实现来自 libmath_utils.a
 #include "math_utils/math_utils.h"
 
+JavaVM* gJavaVM = nullptr;
+
+extern "C"
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    gJavaVM = vm;
+    return JNI_VERSION_1_6;
+}
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_series_ndk_MainActivity_stringFromJNI(
         JNIEnv *env,
