@@ -9,6 +9,9 @@
 #include <jni.h>
 #include <pthread.h>
 #include <thread>
+#include <mutex>
+#include <vector>
+#include <string>
 #include <android/log.h>
 
 #define LOG_TAG "NDK_DEMO"
@@ -107,4 +110,65 @@ Java_com_series_ndk_MainActivity_nativeStdThreadDemo(JNIEnv *env, jobject thiz) 
     // std::thread 析构前必须 join() 或 detach()，否则程序直接 std::terminate。
     // 这里不需要等结果，所以 detach，让它后台自己跑完。
     worker.detach();
+}
+
+// ======== std::mutex 演示：多线程抢同一个计数器 ========
+// 这几个线程不碰 JNI，纯 C++ 层面的数据竞争，用来对比“加锁 vs 不加锁”的结果差异。
+static constexpr int kThreadCount = 4;
+static constexpr int kIncrementsPerThread = 100000;
+
+static void incrementWithoutLock(int *counter) {
+    for (int i = 0; i < kIncrementsPerThread; i++) {
+        // 危险写法：多线程同时读-加-写同一个 int，没有任何同步手段
+        (*counter)++;
+    }
+}
+
+static void incrementWithLock(int *counter, std::mutex *mutex) {
+    for (int i = 0; i < kIncrementsPerThread; i++) {
+        // std::lock_guard 在构造时 lock()，析构（离开作用域）时自动 unlock()，
+        // 即使中间抛异常也不会漏解锁，比手动 mutex->lock()/unlock() 更安全
+        std::lock_guard<std::mutex> guard(*mutex);
+        (*counter)++;
+    }
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_series_ndk_MainActivity_nativeMutexDemo(JNIEnv *env, jobject thiz) {
+    const int expected = kThreadCount * kIncrementsPerThread;
+
+    // 1. 不加锁：多个线程同时对同一个 int 做 ++，结果几乎必然小于期望值（丢计数）
+    int unsafeCounter = 0;
+    {
+        std::vector<std::thread> threads;
+        for (int i = 0; i < kThreadCount; i++) {
+            threads.emplace_back(incrementWithoutLock, &unsafeCounter);
+        }
+        for (auto &t: threads) {
+            t.join(); // 这里要等所有线程跑完再读结果，所以用 join 而不是 detach
+        }
+    }
+
+    // 2. 加锁：std::mutex 保证同一时刻只有一个线程能执行临界区（++counter），结果总是精确的
+    int safeCounter = 0;
+    std::mutex mutex;
+    {
+        std::vector<std::thread> threads;
+        for (int i = 0; i < kThreadCount; i++) {
+            threads.emplace_back(incrementWithLock, &safeCounter, &mutex);
+        }
+        for (auto &t: threads) {
+            t.join();
+        }
+    }
+
+    LOGI("mutex demo: expected=%d, unsafeCounter=%d, safeCounter=%d",
+         expected, unsafeCounter, safeCounter);
+
+    // 这里没有另起线程调回 Java，仍在原来的 JNI 调用线程上，env 直接能用，无需 attach/detach
+    std::string result = "expected=" + std::to_string(expected) +
+                          ", 不加锁结果=" + std::to_string(unsafeCounter) +
+                          ", 加锁结果=" + std::to_string(safeCounter);
+    return env->NewStringUTF(result.c_str());
 }

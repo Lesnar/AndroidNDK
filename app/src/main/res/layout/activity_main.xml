@@ -128,6 +128,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="运行 nativeStdThreadDemo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="======== std::mutex 演示 =========" />
+
+        <Button
+            android:id="@+id/mutex_demo_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="运行 nativeMutexDemo" />
+
+        <TextView
+            android:id="@+id/mutex_demo_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="" />
     </LinearLayout>
 
 

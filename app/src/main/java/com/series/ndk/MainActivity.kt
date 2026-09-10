@@ -65,6 +65,10 @@ class MainActivity : AppCompatActivity() {
         binding.stdThreadBtn.setOnClickListener {
             nativeStdThreadDemo()
         }
+
+        binding.mutexDemoBtn.setOnClickListener {
+            binding.mutexDemoText.text = nativeMutexDemo()
+        }
     }
 
     /**
@@ -110,6 +114,8 @@ class MainActivity : AppCompatActivity() {
     external fun nativeThreadDemo()
 
     external fun nativeStdThreadDemo()
+
+    external fun nativeMutexDemo(): String
 
     fun showMessage(message: String){
         runOnUiThread {
