@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include <iostream>
 #include <android/log.h>
 
 // ======== 日志宏 ========
@@ -150,7 +151,7 @@ Java_com_series_ndk_MainActivity_createUser(JNIEnv *env, jobject thiz) {
     // 2. 拿到构造方法的 jmethodID，方法名固定为 <init>
     //    签名 (Ljava/lang/String;I)V 对应 User(name: String, age: Int)
     jmethodID constructor = env->GetMethodID(userClass, "<init>",
-                                             "(Ljava/lang/String;I)V");
+            "(Ljava/lang/String;I)V");
     if (constructor == nullptr) {
         return nullptr;
     }
@@ -177,5 +178,27 @@ Java_com_series_ndk_MainActivity_squareFromStaticLib(JNIEnv *env, jobject thiz, 
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_series_ndk_MainActivity_factorialFromStaticLib(JNIEnv *env, jobject thiz, jint n) {
+    std::cout << "factorial input n = " << n << std::endl;
     return mu_factorial(n);
+}
+
+class User {
+public:
+    User(std::string name) : name_(std::move(name)) {
+    }
+
+    std::string getName() const {
+        return name_;
+    }
+
+    std::string name_;
+};
+
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_series_ndk_MainActivity_getUserFromCPP(JNIEnv *env, jobject thiz) {
+    auto user = std::make_unique<User>("Martin from c++");
+    std::string name = user->getName();
+    return env->NewStringUTF(name.c_str());
 }

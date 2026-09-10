@@ -49,6 +49,13 @@ class MainActivity : AppCompatActivity() {
         binding.staticLibText.text =
             "squareFromStaticLib(7) = ${squareFromStaticLib(7)}\n" +
             "factorialFromStaticLib(10) = ${factorialFromStaticLib(10)}"
+
+//        ======== vector 演示：点击按钮执行，结果打在 Logcat（过滤 NDK_DEMO）========
+        binding.vectorDemoBtn.setOnClickListener {
+            vectorDemo()
+        }
+
+        binding.userFromCppText.text = "getUserFromCPP() = ${getUserFromCPP()}"
     }
 
     /**
@@ -82,6 +89,12 @@ class MainActivity : AppCompatActivity() {
     external fun squareFromStaticLib(x: Int): Int
 
     external fun factorialFromStaticLib(n: Int): Long
+
+//    ======== vector 演示：输出在 Logcat，过滤 NDK_DEMO ==========
+
+    external fun vectorDemo()
+
+    external fun getUserFromCPP(): String
 
     fun showMessage(message: String){
         Toast.makeText(this, "This toast from C++：$message", Toast.LENGTH_SHORT).show()

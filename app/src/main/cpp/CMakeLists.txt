@@ -26,7 +26,8 @@ project("ndk")
 # used in the AndroidManifest.xml file.
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
-        native-lib.cpp)
+        native-lib.cpp
+        vector.cpp)
 
 # ======== 静态库示例 ========
 # STATIC 表示把 math_utils.c 编成 libmath_utils.a（SHARED 则是编成 .so）。
